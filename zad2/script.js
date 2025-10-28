@@ -7,6 +7,7 @@ let currentComponentView = "jsx"; // 'jsx' lub 'createElement'
 let selectedPokemonName = null;
 let globalFilteredArray = null;
 let selectedTypes = new Set();
+let currentSearchText = "";
 
 const POKEMON_TYPES = [
   "grass",
@@ -240,15 +241,11 @@ const fetchPokemons = async () => {
 const onInputChangeHandler = (event) => {
   if (isLoading) return;
 
-  const searchText = event.target.value.toLowerCase();
-  const filteredArr = pokemonsArray.filter((obj) => {
-    const isId = /^\d/.test(searchText);
-    if (isId) return searchText == pokemonDetailsCache[obj.name].id;
-    else return obj.name.toLowerCase().startsWith(searchText);
-  });
+  // Update the global search text state
+  currentSearchText = event.target.value;
 
-  globalFilteredArray = filteredArr;
-  renderApp();
+  // Call the consolidated filtering logic
+  applyFilters();
 };
 
 const filterByType = (pokemonType) => {
@@ -256,15 +253,38 @@ const filterByType = (pokemonType) => {
   if (selectedTypes.has(pokemonType)) selectedTypes.delete(pokemonType);
   else selectedTypes.add(pokemonType);
 
-  const typesSetToArr = Array.from(selectedTypes);
-  // Keep only pokemons whose cached details include ALL required types
-  globalFilteredArray = (globalFilteredArray || pokemonsArray).filter((obj) => {
-    const details = pokemonDetailsCache[obj.name];
-    const types = details.types.map((t) => t.type.name);
-    // require every selected type to be included
-    return typesSetToArr.every((r) => types.includes(r));
-  });
+  // Call the consolidated filtering logic
+  applyFilters();
+};
 
+const applyFilters = () => {
+  let filteredArr = pokemonsArray;
+  const typesToFilter = Array.from(selectedTypes);
+
+  // Apply Type Filter
+  if (typesToFilter.length > 0) {
+    filteredArr = filteredArr.filter((obj) => {
+      const details = pokemonDetailsCache[obj.name];
+      const types = details.types.map((t) => t.type.name);
+      // Require every selected type to be included (AND logic)
+      return typesToFilter.every((r) => types.includes(r));
+    });
+  }
+
+  // Apply Search Filter
+  if (currentSearchText) {
+    const searchTextLower = currentSearchText.toLowerCase();
+
+    filteredArr = filteredArr.filter((obj) => {
+      const details = pokemonDetailsCache[obj.name];
+      const isIdSearch = /^\d+$/.test(searchTextLower); // Check if input is only digits
+
+      if (isIdSearch) return details.id.toString() === searchTextLower;
+      else return obj.name.toLowerCase().startsWith(searchTextLower);
+    });
+  }
+
+  globalFilteredArray = filteredArr;
   renderApp();
 };
 
@@ -299,6 +319,7 @@ const MainPage = () => {
           className="pokemon-search"
           placeholder="Wyszukaj pokemona"
           onChange={onInputChangeHandler}
+          value={currentSearchText}
         ></input>
       </>
     );
