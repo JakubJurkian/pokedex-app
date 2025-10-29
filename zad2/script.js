@@ -31,7 +31,7 @@ const POKEMON_TYPES = [
 ];
 
 // Component responsible for rendering pokemon details
-const RenderPokemonInfo = ({ pokemonName }) => {
+const RenderPokemonDetails = ({ pokemonName }) => {
   const pokemon = pokemonDetailsCache[pokemonName];
   console.log(pokemon);
 
@@ -218,7 +218,7 @@ const fetchPokemons = async () => {
   renderApp();
 
   try {
-    const res = await fetch("https://pokeapi.co//api/v2/pokemon?limit=1302");
+    const res = await fetch("https://pokeapi.co//api/v2/pokemon?limit=50");
     const parsed = await res.json();
     pokemonsArray = parsed.results;
     console.log(parsed.results);
@@ -244,7 +244,7 @@ const onInputChangeHandler = (event) => {
   // Update the global search text state
   currentSearchText = event.target.value;
 
-  // Call the consolidated filtering logic
+  // Call the filtering logic
   applyFilters();
 };
 
@@ -294,7 +294,7 @@ const MainPage = () => {
     content = <p>Trwa pobieranie danych...</p>;
   } else if (currentView === "details" && selectedPokemonName) {
     input = null;
-    content = <RenderPokemonInfo pokemonName={selectedPokemonName} />;
+    content = <RenderPokemonDetails pokemonName={selectedPokemonName} />;
   } else {
     input = (
       <>
