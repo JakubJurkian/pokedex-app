@@ -1,39 +1,45 @@
-import PokemonList from "../components/PokemonList";
+import { PokemonDetailsCache, PokemonListItem } from "@/types";
+import { PokemonList } from "../components/PokemonList";
 
-export default function HomePage() {
-  let pokemonsArray: { url: string | URL | Request; name: string }[] = [];
-  const pokemonDetailsCache: Record<string, unknown> = {};
+async function fetchInitialPokemonList(): Promise<PokemonListItem[]> {
+  const url = "https://pokeapi.co/api/v2/pokemon?limit=50";
+  const res = await fetch(url, { cache: "force-cache" }); // Użycie domyślnego cache Next.js dla SSG
+  if (!res.ok) throw new Error("Failed to fetch initial list");
+  const data = await res.json();
+  return data.results;
+}
 
-  const fetchPokemons = async () => {
-    try {
-      const res = await fetch("https://pokeapi.co//api/v2/pokemon?limit=50");
-      const parsed = await res.json();
-      // eslint-disable-next-line react-hooks/immutability
-      pokemonsArray = parsed.results;
-      console.log(parsed.results);
+export default async function HomePage() {
+  const pokemonsArray = await fetchInitialPokemonList();
 
-      const detailPromises = pokemonsArray.map(
-        async (obj: { url: string | URL | Request; name: string | number }) => {
-          const resDetail = await fetch(obj.url);
-          const parsedDetail = await resDetail.json();
-          pokemonDetailsCache[String(obj.name)] = parsedDetail;
-        }
-      );
-      await Promise.all(detailPromises);
-    } catch (err) {
-      console.error("Błąd pobierania:", err);
+  const detailPromises = pokemonsArray.map(async (obj) => {
+    const resDetail = await fetch(obj.url, { cache: "force-cache" });
+    if (!resDetail.ok) return null;
+    return await resDetail.json();
+  });
+
+  const rawDetails = await Promise.all(detailPromises);
+  const pokemonDetailsCache: PokemonDetailsCache = {};
+
+  rawDetails.forEach((detail) => {
+    if (detail && detail.name) {
+      pokemonDetailsCache[detail.name] = detail;
     }
-  };
-
-  fetchPokemons();
+  });
 
   return (
     <>
-      <h1 className="main-page-h1">POKEDEX</h1>
+      <a
+        href="/search"
+        className="mt-8 px-6 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition duration-300"
+      >
+        Go to Search (SSR)
+      </a>
       <section>
-        <ol className="pokemon-list">
-          <PokemonList arr={pokemonsArray} />
-        </ol>
+        <PokemonList
+          pokemons={pokemonsArray}
+          detailsCache={pokemonDetailsCache}
+        />
       </section>
     </>
   );
