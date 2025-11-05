@@ -1,0 +1,29 @@
+@import "tailwindcss";
+@tailwind utilities;
+
+body {
+  background-color: rgb(68, 66, 66);
+  color: white;
+  font-family: Times New Roman, sans-serif;
+  font-weight: bold;
+}
+
+.linear-background {
+  background: linear-gradient(45deg, #ffcc00, #ff6b35, #ff3366, #cc33ff);
+}
+
+.linear-background-2 {
+  background: linear-gradient(145deg, #4a4848, #3a3838);
+  border: 2px solid #555;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+.pokemon-details-img-bg {
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.1),
+    rgba(0, 0, 0, 0.2)
+  );
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
